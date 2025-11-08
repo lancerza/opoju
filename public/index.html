@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>FLOW Bet Dashboard — Premium</title>
+  <meta name="color-scheme" content="dark light" />
+  <meta name="theme-color" content="#0b0f1a" />
+
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root{
+      --bg:#0b0f1a; --bg-2:#0f1626; --card:#121b2d; --text:#e6edf7; --muted:#97a5be;
+      --primary:#7c73ff; --primary-2:#6c5ce7; --ok:#22c55e; --warn:#f59e0b; --urgent:#ef4444;
+      --ring: 0 0 0 2px rgba(124,115,255,.25), 0 10px 25px -10px rgba(124,115,255,.35);
+    }
+    *{ box-sizing:border-box }
+    html,body{ height:100%; margin:0 }
+    body{
+      font-family: 'Sarabun', system-ui, -apple-system, 'Poppins', sans-serif;
+      background: radial-gradient(1200px 600px at 20% -10%, rgba(124,115,255,.08), transparent 60%),
+                  radial-gradient(1200px 600px at 120% 10%, rgba(108,92,231,.08), transparent 60%),
+                  var(--bg);
+      color: var(--text);
+      letter-spacing:.1px;
+    }
+    .wrap{ max-width:1100px; margin: 28px auto; padding: 0 16px; }
+    .title{
+      display:flex; align-items:center; gap:12px; margin-bottom:18px;
+    }
+    .logo{
+      width:40px; height:40px; border-radius:12px; background:linear-gradient(135deg,var(--primary),var(--primary-2));
+      box-shadow: var(--ring);
+    }
+    h1{ font: 700 22px/1 'Poppins', sans-serif; margin:0 }
+    .muted{ color: var(--muted); font-size:14px }
+    .row{ display:grid; grid-template-columns: 1fr; gap:14px }
+    @media (min-width:900px){ .row{ grid-template-columns: 1.2fr .8fr } }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.02), transparent 26%),
+                  linear-gradient(0deg, rgba(255,255,255,.015), transparent 26%),
+                  var(--card);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 18px; padding: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25), 0 0 0 1px rgba(255,255,255,.02) inset;
+    }
+    .card h2{ font:700 16px/1.2 'Poppins', sans-serif; margin: 0 0 10px }
+    .controls{
+      display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:12px;
+    }
+    .btn{
+      appearance:none; border:none; cursor:pointer; padding:10px 14px; border-radius:12px;
+      background: linear-gradient(135deg, rgba(124,115,255,.15), rgba(108,92,231,.15));
+      color: var(--text); font-weight:600;
+      box-shadow: var(--ring);
+      transition: transform .15s ease;
+    }
+    .btn:hover{ transform: translateY(-1px) }
+    input[type="file"]{ display:none }
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      background: rgba(255,255,255,.06); padding:8px 12px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.08); font-weight:600; font-size:13px;
+    }
+    .grid{
+      display:grid; grid-template-columns: 2fr 1fr 1fr; gap:8px; font-size:14px; align-items:center;
+    }
+    .grid .head{ color: var(--muted); font-weight:700; text-transform: uppercase; font-size:12px; letter-spacing:.4px }
+    .rowi{ padding:10px 12px; border-radius:12px; background: rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.06) }
+    .rowi .name{ font-weight:700 }
+    .rowi .val{ text-align:right; font-family: 'Poppins', sans-serif }
+    .total{
+      display:flex; gap:10px; align-items:center; font-weight:700;
+      background: linear-gradient(135deg, rgba(34,197,94,.18), rgba(124,115,255,.12));
+      border:1px solid rgba(34,197,94,.35); padding:10px 12px; border-radius:12px; margin-top:8px;
+    }
+    .footer{ margin-top: 20px; color: var(--muted); font-size:12px; text-align:center }
+    canvas{ width:100%; height:340px; }
+    .warn{ color: var(--warn) }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="title">
+      <div class="logo"></div>
+      <div>
+        <h1>FLOW Bet Dashboard</h1>
+        <div class="muted">สรุปยอดแทง & เปอร์เซ็นต์แต่ละสาย • พร้อมกราฟ • รันบน GitHub Pages</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="card">
+        <h2>สรุปภาพรวม</h2>
+        <div class="controls">
+          <label class="btn">
+            <input id="upload" type="file" accept=".csv" />
+            อัปโหลด CSV (ไม่เก็บไฟล์)
+          </label>
+          <span class="pill">ไฟล์ที่ใช้งาน: <span id="fileName">data/data.csv</span></span>
+          <span class="pill">รายการทั้งหมด: <span id="count">0</span></span>
+        </div>
+
+        <div class="grid head">
+          <div>สาย</div><div class="val">ยอดแทง</div><div class="val">% Auto</div>
+        </div>
+        <div id="rows"></div>
+        <div class="total">
+          รวมทั้งหมด: <span id="sum">0</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>กราฟเปอร์เซ็นต์แต่ละสาย</h2>
+        <canvas id="chart"></canvas>
+        <div class="muted" style="margin-top:6px">
+          * ถ้าเปอร์เซ็นต์ไม่ครบ 100% ให้ตรวจสอบแถวที่ยอดแทงเป็น 0 หรือข้อมูลสกปรก
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">© 2025 FLOW • Premium UI</div>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
